@@ -1,10 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const { Client, Intents, MessageActionRow, MessageButton } = require('discord.js');
+const { Client, Intents, MessageActionRow, MessageButton, MessageAttachment } = require('discord.js');
 const COMMANDS = require('./commands');
 const { getMatchData, parseResponse } = require('./matchDataFromId');
-const { Client, Intents, MessageAttachment } = require('discord.js');
 
 dotenv.config();
 

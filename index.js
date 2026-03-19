@@ -1084,7 +1084,23 @@ async function getUserDataFromDiscord(id) {
       }
       return await response.json();
     } catch(err){
-      throw new Error(`Failed to fetch user ${id}: ${err.message}`);
+      throw new Error('Could not find a Minecraft account linked to your account. Please link your discord to your MCSR Ranked account. In the MCSR Ranked client, go to your Ranked **Profile** -> **Settings** -> **Link Discord** and follow the instructions in the browser. Make sure it says Public: **ON**');
+    }
+}
+
+async function deployCommands(){
+  try {
+      if (process.env.GUILD_ID) {
+        const guild = await client.guilds.fetch(process.env.GUILD_ID);
+        await guild.commands.set(COMMANDS);
+        console.log(`Registered ${COMMANDS.length} guild command(s) in ${guild.name}.`);
+      } else {
+        await client.application.commands.set(COMMANDS);
+        console.log(`Registered ${COMMANDS.length} global command(s).`);
+      }
+    } catch (error) {
+      console.error('Failed to deploy commands.', error);
+      process.exitCode = 1;
     }
 }
 
@@ -1093,6 +1109,7 @@ const client = new Client({
 });
 
 client.once('ready', () => {
+  deployCommands()
   console.log(`Logged in as ${client.user.tag}`);
 });
 

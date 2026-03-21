@@ -9,6 +9,12 @@ module.exports = [
         type: 'INTEGER',
         required: true,
       },
+      {
+        name: 'week',
+        description: 'Week number.',
+        type: 'INTEGER',
+        required: true,
+      },
     ],
   },
   {

@@ -17,6 +17,9 @@ const MAX_TIME = {
   6: 30 * 60 * 1000,
 };
 
+const WEBSITE_URL = process.env.WEBSITE_URL
+const WEBSITE_API_KEY = process.env.WEBSITE_API_KEY
+
 function mkS() {
   return { settings: { leagueLimits: { ...MAX_TIME }, pendingDisplacements: {}, loggingEnabled: true }, channels: {} };
 }
@@ -900,7 +903,7 @@ function fLB(competition){
     }
   }
 
-  const header = [`**${fCL(competition)} Leaderboard**`, `Status: ${fCS(competition)}`];
+  const header = [`**${fCL(competition)} Week ${competition.week} Leaderboard**`, `Status: ${fCS(competition)}`];
 
   if(currentSeed){
     header.push(`Current seed: ${currentSeed.name}`);
@@ -1215,10 +1218,12 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const leagueNumber = interaction.options.getInteger('league', true);
+      const week = interaction.options.getInteger('week', true);
       const maxTimeLimitSeconds = gLim(store, leagueNumber);
 
       channel.competition = {
         leagueNumber,
+        week, 
         maxTimeLimitSeconds,
         status: 'active',
         startedAt: new Date().toISOString(),
@@ -1236,7 +1241,7 @@ client.on('interactionCreate', async (interaction) => {
       };
       await cRegMsg(interaction.channel, channel.competition);
       const initMessage = await interaction.reply({
-        content: `Started the current competition for League ${leagueNumber}   Registration is now open. Time limit: ${fT(maxTimeLimitSeconds)}.`,
+        content: `Started the current competition for League ${leagueNumber} Registration is now open. Time limit: ${fT(maxTimeLimitSeconds)}.`,
         fetchReply: true,
       });
       channel.competition.initMessageId = initMessage.id;
@@ -1357,6 +1362,41 @@ client.on('interactionCreate', async (interaction) => {
 
       if(result.missing.length > 0){
         lines.push(`Unmatched MCSR names: ${result.missing.join(', ')}`);
+      }
+      
+      const results = [];
+      i = 1
+      for (const player of result.matched){
+        results.push({
+          playerName: player.name.split("(")[0],
+          pointsWon: player.dnf ? 0 : gRC(competition) - i + 1,
+          timeMs: player.timeMs,
+          placement: i,
+        })
+        i++
+      }
+      
+      try {
+        const request = await fetch(WEBSITE_URL + "/api/write/match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": WEBSITE_API_KEY
+        },
+        body: JSON.stringify({
+          "weekNumber": Number(competition.week),
+          "matchNumber": Number(seed.name),
+          "leagueTier": Number(competition.leagueNumber),
+          "rankedMatchId": matchId,
+          "results": results,
+        }),
+      });
+        if (!request.ok) {
+          throw new Error(`${request.status} error, could not import match data to website.`);
+        }
+      } catch (error) {
+        console.log(error.stack);
+        throw new Error(`${error.message} - Failed to post match ${matchId}`);
       }
 
       await interaction.editReply(lines.join('\n'));

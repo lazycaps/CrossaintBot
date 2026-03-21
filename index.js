@@ -1795,9 +1795,20 @@ client.on('interactionCreate', async (interaction) => {
         competition = rC(store, channel);
         break;
       }
+
+      if (competition == ""){
+        await interaction.reply("Please enter a valid league number");
+      }
+
+      const lb = fLB(competition);
       
       await interaction.reply({
-        content: competition == "" ? "Please enter a valid league number" : fLB(competition),
+        content: lb.substring(0,2000),
+        ephemeral: true
+      });
+      if (lb.length <= 2000) return;
+      await interaction.followUp({
+        content: lb.substring(2001,lb.length),
         ephemeral: true
       });
       return;

@@ -1842,17 +1842,17 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply("Please enter a valid league number");
       }
 
-      const lb = fLB(competition);
-      
+      const lb = chunkMsg(fLB(competition));
       await interaction.reply({
-        content: lb.substring(0,2000),
-        ephemeral: true
-      });
-      if (lb.length <= 2000) return;
-      await interaction.followUp({
-        content: lb.substring(2001,lb.length),
-        ephemeral: true
-      });
+        content: lb[0],
+        ephemeral: true,
+      })
+      for (let index = 1; index < lb.length; index++) {
+        await interaction.followUp({
+          content: lb[index],
+          ephemeral: true,
+        });
+      }
       return;
     }
 
